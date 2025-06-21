@@ -30,6 +30,10 @@
                 <label for="checkout">Check-out</label>
                 <input id="checkout" type="date" v-model="form.checkOut" required />
               </div>
+              <div v-if="isOverlapping" class="reservation-warning">
+                ❌ Cabana este deja rezervată în perioada selectată. Te rugăm să alegi alte date.
+              </div>
+
 
               <div class="form-group total-amount" v-if="totalPrice">
                 <strong>Total de plată:</strong> {{ totalPrice }} lei
@@ -41,7 +45,9 @@
               </div>
 
               <button type="submit" class="btn btn-full">Rezervă</button>
+              
             </form>
+            
           </div>
 
           <div class="cabin-info-card" v-if="cabin">
@@ -61,16 +67,14 @@
                 <div><font-awesome-icon :icon="['fas', 'money-bill-wave']" /> {{ cabin.price }} lei / noapte</div>
               </div>
 
-              
+
 
               <div v-if="cabin.amenities" class="section amenities-box">
                 <h3>Facilități</h3>
                 <ul class="amenities-list">
                   <li v-for="(item, index) in cabin.amenities.split(',')" :key="index">
-                    <font-awesome-icon
-                      :icon="amenityIcons[item.trim()] || ['fas', 'check-circle']"
-                      class="amenity-icon"
-                    />
+                    <font-awesome-icon :icon="amenityIcons[item.trim()] || ['fas', 'check-circle']"
+                      class="amenity-icon" />
                     {{ item.trim() }}
                   </li>
                 </ul>
@@ -105,7 +109,13 @@
       </section>
     </div>
   </div>
+  <div v-if="errorMessage" class="toast-error">
+  {{ errorMessage }}
+</div>
+
 </template>
+
+
 
 
 <script setup lang="ts">
@@ -114,6 +124,9 @@ import { useRoute } from 'vue-router';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { computed } from 'vue'
+
+
+const errorMessage = ref('');
 
 
 const totalPrice = computed(() => {
@@ -145,26 +158,29 @@ const form = reactive({
 const formSubmitted = ref(false);
 
 const submitForm = async () => {
-    if (!cabin.value) {
-        console.error('Cabana nu este încărcată.');
-        return;
-    }
+  if (!cabin.value) {
+    console.error('Cabana nu este încărcată.');
+    return;
+  }
 
-    const payload = {
-        name: form.name,
-        email: form.email,
-        phone: form.phone,
-        country: form.country,
-        message: form.message,
-        cabinId: cabin.value.id,
-        cabinName: cabin.value.name,
-        cabinLocation: cabin.value.location,
-        cabinCapacity: cabin.value.capacity,
-        cabinBedrooms: cabin.value.bedrooms,
-        cabinPrice: cabin.value.price
-    };
+  const payload = {
+    name: form.name,
+    email: form.email,
+    phone: form.phone,
+    country: form.country,
+    message: form.message,
+    checkIn: form.checkIn,
+    checkOut: form.checkOut,
+    cabinId: cabin.value.id,
+    cabinName: cabin.value.name,
+    cabinLocation: cabin.value.location,
+    cabinCapacity: cabin.value.capacity,
+    cabinBedrooms: cabin.value.bedrooms,
+    cabinPrice: cabin.value.price
+  };
 
-        try {
+  
+  try {
     const response = await axios.post('http://172.20.10.3:5046/api/reservationrequest', payload);
 
     localStorage.setItem('reservation', JSON.stringify(response.data));
@@ -197,16 +213,23 @@ const submitForm = async () => {
       formSubmitted.value = false;
     }, 5000);
 
-        form.name = '';
-        form.email = '';
-        form.phone = '';
-        form.country = '';
-        form.message = '';
+    form.name = '';
+    form.email = '';
+    form.phone = '';
+    form.country = '';
+    form.message = '';
 
-    } catch (error) {
-        console.error('Error submitting the form:', error);
-    }
+  } catch (error: any) {
+    if (error.response?.status === 409) {
+  errorMessage.value = error.response.data.message;
+  setTimeout(() => errorMessage.value = '', 4000);
+} else {
+  console.error('Eroare generală la rezervare:', error);
+}
+
+  }
 };
+
 const amenityIcons: Record<string, [string, string]> = {
   WiFi: ['fas', 'wifi'],
   Parcare: ['fas', 'car'],
@@ -226,80 +249,134 @@ const amenityIcons: Record<string, [string, string]> = {
 
 
 interface Cabin {
-    id: number;
-    name: string;
-    location: string;
-    image: string;
-    capacity: number;
-    bedrooms: number;
-    price: number;
-    description?: string;
-    amenities?: string;
+  id: number;
+  name: string;
+  location: string;
+  image: string;
+  capacity: number;
+  bedrooms: number;
+  price: number;
+  description?: string;
+  amenities?: string;
 }
 
 const cabin = ref<Cabin | null>(null);
 const route = useRoute();
+const reservedRanges = ref<{ checkIn: string; checkOut: string }[]>([]);
 
 onMounted(async () => {
-    try {
-        const { data } = await axios.get(`http://172.20.10.3:5046/api/cabins/${route.params.id}`);
-        cabin.value = {
-            id: data.Id,
-            name: data.Name,
-            location: data.Location,
-            image: data.Image,
-            capacity: data.Capacity,
-            bedrooms: data.Bedrooms,
-            price: data.Price,
-            description: data.Description,
-            amenities:data.Amenities
-        };
-    } catch (error) {
-        console.error('Eroare la încărcarea cabanei:', error);
-    }
+  try {
+    const { data } = await axios.get(`http://172.20.10.3:5046/api/cabins/${route.params.id}`);
+    cabin.value = {
+      id: data.Id,
+      name: data.Name,
+      location: data.Location,
+      image: data.Image,
+      capacity: data.Capacity,
+      bedrooms: data.Bedrooms,
+      price: data.Price,
+      description: data.Description,
+      amenities: data.Amenities
+    };
+  } catch (error) {
+    console.error('Eroare la încărcarea cabanei:', error);
+  }
+  const { data: reservations } = await axios.get(`http://172.20.10.3:5046/api/cabins/reserved-dates/${route.params.id}`);
+  reservedRanges.value = reservations;
+});
+
+const isOverlapping = computed(() => {
+  if (!form.checkIn || !form.checkOut) return false;
+
+  const checkInDate = new Date(form.checkIn);
+  const checkOutDate = new Date(form.checkOut);
+
+  return reservedRanges.value.some(r => {
+    const rStart = new Date(r.checkIn);
+    const rEnd = new Date(r.checkOut);
+    return (
+      (checkInDate >= rStart && checkInDate < rEnd) ||
+      (checkOutDate > rStart && checkOutDate <= rEnd) ||
+      (checkInDate <= rStart && checkOutDate >= rEnd)
+    );
+  });
 });
 
 
+
 setTimeout(() => {
-    formSubmitted.value = false;
+  formSubmitted.value = false;
 }, 5000);
 
 
 const faqs = ref([
-    {
-        question: "Cum pot face o rezervare?",
-        answer: "Poți face o rezervare direct pe site-ul nostru, prin telefon la numărul +40 722 123 456 sau prin email la rezervari@cabanemontane.ro. Recomandăm rezervarea din timp, mai ales în sezonul de vârf."
-    },
-    {
-        question: "Care este politica de anulare?",
-        answer: "Pentru anulările făcute cu cel puțin 7 zile înainte de data check-in-ului, se returnează integral suma plătită. Pentru anulările făcute între 3-7 zile înainte, se returnează 50% din sumă. Pentru anulările făcute cu mai puțin de 3 zile înainte, suma nu se returnează."
-    },
-    {
-        question: "Se acceptă animale de companie?",
-        answer: "Unele dintre cabanele noastre acceptă animale de companie, dar este necesar să verifici această informație în descrierea fiecărei cabane. Pentru cabanele care acceptă animale de companie, se percepe o taxă suplimentară."
-    },
-    {
-        question: "Care este ora de check-in și check-out?",
-        answer: "Ora standard de check-in este 15:00, iar cea de check-out este 11:00. În anumite situații, cu acordul prealabil, aceste ore pot fi flexibile."
-    },
-    {
-        question: "Cabanele sunt dotate cu bucătărie complet utilată?",
-        answer: "Da, toate cabanele noastre sunt dotate cu bucătărie complet utilată, inclusiv aragaz, frigider, cuptor cu microunde, veselă și tacâmuri, ceainic electric și cafetieră."
-    }
+  {
+    question: "Cum pot face o rezervare?",
+    answer: "Poți face o rezervare direct pe site-ul nostru, prin telefon la numărul +40 722 123 456 sau prin email la rezervari@cabanemontane.ro. Recomandăm rezervarea din timp, mai ales în sezonul de vârf."
+  },
+  {
+    question: "Care este politica de anulare?",
+    answer: "Pentru anulările făcute cu cel puțin 7 zile înainte de data check-in-ului, se returnează integral suma plătită. Pentru anulările făcute între 3-7 zile înainte, se returnează 50% din sumă. Pentru anulările făcute cu mai puțin de 3 zile înainte, suma nu se returnează."
+  },
+  {
+    question: "Se acceptă animale de companie?",
+    answer: "Unele dintre cabanele noastre acceptă animale de companie, dar este necesar să verifici această informație în descrierea fiecărei cabane. Pentru cabanele care acceptă animale de companie, se percepe o taxă suplimentară."
+  },
+  {
+    question: "Care este ora de check-in și check-out?",
+    answer: "Ora standard de check-in este 15:00, iar cea de check-out este 11:00. În anumite situații, cu acordul prealabil, aceste ore pot fi flexibile."
+  },
+  {
+    question: "Cabanele sunt dotate cu bucătărie complet utilată?",
+    answer: "Da, toate cabanele noastre sunt dotate cu bucătărie complet utilată, inclusiv aragaz, frigider, cuptor cu microunde, veselă și tacâmuri, ceainic electric și cafetieră."
+  }
 ]);
 
 const activeFaq = ref(-1);
 
 const toggleFaq = (index: number) => {
-    if (activeFaq.value === index) {
-        activeFaq.value = -1;
-    } else {
-        activeFaq.value = index;
-    }
+  if (activeFaq.value === index) {
+    activeFaq.value = -1;
+  } else {
+    activeFaq.value = index;
+  }
 };
 </script>
 
 <style scoped>
+.toast-error {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #f44336;
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: 9999;
+  animation: slide-up 0.3s ease-out;
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0%);
+    opacity: 1;
+  }
+}
+
+.reservation-warning {
+  margin-top: 1rem;
+  background-color: #ffe3e3;
+  color: #c62828;
+  border: 1px solid #f5c6cb;
+  padding: 1rem;
+  border-radius: 8px;
+  font-weight: 500;
+}
 
 .page-header {
   background-color: var(--color-primary);
@@ -518,6 +595,7 @@ const toggleFaq = (index: number) => {
   border-radius: 4px;
   overflow: hidden;
 }
+
 .total-amount {
   font-size: 1.2rem;
   margin-top: 1rem;

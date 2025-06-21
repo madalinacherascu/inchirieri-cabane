@@ -90,7 +90,9 @@ onMounted(async () => {
       bedrooms: cabin.Bedrooms,
       price: cabin.Price,
       availabelfrom: cabin.AvailableFrom,
-      availableto: cabin.AvailableTo
+      availableto: cabin.AvailableTo,
+      checkIn: cabin.checkIn,
+      checkOut: cabin.checkOut
     }))
 
     console.log(results.value)

@@ -16,11 +16,12 @@
           </label>
           <select id="location" v-model="location">
             <option value="">Toate locațiile</option>
-            <option value="brasov">Brașov</option>
+            <option value="brașov">Brașov</option>
             <option value="predeal">Predeal</option>
             <option value="sinaia">Sinaia</option>
             <option value="busteni">Bușteni</option>
-            <option value="rasnov">Râșnov</option>
+            <option value="râșnov">Râșnov</option>
+            <option valie="fundata">Fundata</option>
           </select>
         </div>
 
@@ -62,18 +63,57 @@
         </button>
       </div>
 
-      <div class="results" v-if="results.length">
-        <h3>Rezultate găsite:</h3>
-        <div v-for="cabin in results" :key="cabin.id" class="cabin-card">
-          <img :src="cabin.image" alt="Imagine cabană" class="cabin-image" />
-          <div class="cabin-info">
-            <h4>{{ cabin.name }}</h4>
-            <p>Locație: {{ cabin.location }}</p>
-            <p>Capacitate: {{ cabin.capacity }} persoane</p>
-            <p>Preț pe noapte: {{ cabin.price }} RON</p>
-          </div>
+     <div class="results" v-if="searchResults.length">
+  <h3 class="results-title">Rezultate găsite:</h3>
+  <div class="cabin-grid">
+    <div v-for="cabin in searchResults" :key="cabin.id" class="cabin-card">
+      
+      <!-- Imagine + Locație -->
+      <div class="cabin-image">
+        <img :src="cabin.image" :alt="`Imagine ${cabin.name}`" />
+        <div class="cabin-location">
+          <i class="fas fa-map-marker-alt"></i>
+          {{ cabin.location }}
         </div>
       </div>
+
+      <!-- Detalii -->
+      <div class="cabin-details">
+        <h4 class="cabin-name">{{ cabin.name }}</h4>
+
+        <!-- Preț -->
+        <div class="cabin-price">
+          <div class="price">{{ cabin.price }} RON</div>
+          <div class="duration">/ noapte</div>
+        </div>
+
+        <!-- Capacitate și Dormitoare -->
+        <div class="cabin-amenities">
+          <span>{{ cabin.capacity }} persoane</span>
+          <span>{{ cabin.bedrooms }} dormitoare</span>
+        </div>
+
+        <!-- Disponibilitate -->
+        <div class="cabin-availability" v-if="cabin.availableFrom || cabin.availableTo">
+  <span class="label">Disponibilitate:</span>
+  <span class="dates">
+    <template v-if="cabin.availableFrom">
+      {{ new Date(cabin.availableFrom).toLocaleDateString('ro-RO') }}
+    </template>
+    <span v-if="cabin.availableFrom && cabin.availableTo"> – </span>
+    <template v-if="cabin.availableTo">
+      {{ new Date(cabin.availableTo).toLocaleDateString('ro-RO') }}
+    </template>
+  </span>
+</div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
     </section>
 
     <section>
@@ -208,16 +248,19 @@
 import { onMounted, ref } from 'vue';
 import type { Ref } from 'vue';
 import axios from 'axios';
-import { useRouter } from 'vue-router'
+//import { useRouter } from 'vue-router'
 
-const router = useRouter()
-
-const fetchData = async (url: string, transformer: (item: any) => any, target: Ref<any[]>) => {
+const fetchData = async <T>(
+  url: string,
+  transformFn: (item: any) => T,
+  targetArray: Ref<T[]>,
+  params: Record<string, any> = {} // al patrulea parametru
+) => {
   try {
-    const { data } = await axios.get(url);
-    target.value = data.map(transformer);
+    const response = await axios.get(url, { params });
+    targetArray.value = response.data.map(transformFn);
   } catch (error) {
-    console.error(`Eroare la încărcarea de la ${url}:`, error);
+    console.error('Eroare la fetch:', error);
   }
 };
 
@@ -229,9 +272,15 @@ interface Cabin {
   capacity: number;
   bedrooms: number;
   price: number;
-  availabelfrom: string | null;
-  availableto: string | null;
+  availableFrom: string | null;
+  availableTo: string | null;
+  description?: string;
+  amenities?: string;
+  checkIn?: string | null;
+  checkOut?: string | null;
+  images?: string[];
 }
+
 interface Location {
   id: number;
   name: string;
@@ -249,6 +298,7 @@ interface Testimonial {
 const popularCabins = ref<Cabin[]>([]);
 const popularLocations = ref<Location[]>([]);
 const testimonials = ref<Testimonial[]>([]);
+
 onMounted(async () => {
   await fetchData('http://172.20.10.3:5046/api/cabins', (cabin) => ({
     id: cabin.Id,
@@ -274,30 +324,90 @@ onMounted(async () => {
     location: testimonials.Location,
     review: testimonials.Review
   }), testimonials);
+  
 });
 
 const location = ref('')
 const checkIn = ref('')
 const checkOut = ref('')
 const guests = ref('2')
-const results = ref<Cabin[]>([])
 
-const handleSearch = () => {
-  router.push({
-  name: 'SearchResults', 
-  query: {
-    location: location.value,
-    checkIn: checkIn.value,
-    checkOut: checkOut.value,
-    guests: guests.value
-  }
-})
+const searchResults = ref<Cabin[]>([]);
 
+
+const handleSearch = async () => {
+  await fetchData(
+    'http://172.20.10.3:5046/api/cabins/search',
+    (cabin) => ({
+      id: cabin.Id,
+      name: cabin.Name,
+      location: cabin.Location,
+      image: cabin.Image,
+      capacity: cabin.Capacity,
+      bedrooms: cabin.Bedrooms,
+      price: cabin.Price,
+      availableFrom: cabin.AvailableFrom,
+      availableTo: cabin.AvailableTo,
+      checkIn: cabin.CheckIn,
+      checkOut: cabin.CheckOut
+    }),
+    searchResults,
+    {
+      location: location.value,
+      checkIn: checkIn.value,
+      checkOut: checkOut.value,
+      guests: guests.value
+    }
+  )
 }
 
 </script>
 
 <style scoped>
+.results-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.cabin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
+}
+
+.results-title {
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.no-results {
+  text-align: center;
+  color: var(--color-gray);
+  padding: 2rem 0;
+  font-style: italic;
+}
+.cabin-availability {
+  background-color: rgba(39, 174, 96, 0.1); /* verde deschis */
+  color: #27ae60; /* verde accent */
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+  font-size: 0.875rem;
+  display: inline-block;
+  margin-top: 0.75rem;
+}
+
+.cabin-availability .label {
+  font-weight: 600;
+  margin-right: 0.25rem;
+}
+
+.cabin-availability .dates {
+  font-style: italic;
+}
+
+
 .hero {
   height: 80vh;
   min-height: 600px;
@@ -446,6 +556,10 @@ const handleSearch = () => {
 }
 
 .cabin-details {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex: 1;
   padding: 1.5rem;
 }
 

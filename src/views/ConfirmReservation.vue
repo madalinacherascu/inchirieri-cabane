@@ -11,8 +11,8 @@
     <li><strong>Capacitate:</strong> {{ reservation.CabinCapacity }} persoane</li>
     <li><strong>Dormitoare:</strong> {{ reservation.CabinBedrooms }}</li>
     <li><strong>Preț/noapte:</strong> {{ reservation.CabinPrice }} lei</li>
-    <li v-if="reservation.CheckIn"><strong>Check-in:</strong> {{ reservation.CheckIn }}</li>
-    <li v-if="reservation.CheckOut"><strong>Check-out:</strong> {{ reservation.CheckOut }}</li>
+    <li v-if="reservation.checkIn"><strong>Check-in:</strong> {{ reservation.checkIn }}</li>
+    <li v-if="reservation.checkOut"><strong>Check-out:</strong> {{ reservation.checkOut }}</li>
     <li v-if="totalPrice"><strong>Total de plată:</strong> {{ totalPrice }} lei</li>
     <li v-if="reservation.CabinDescription"><strong>Descriere:</strong> {{ reservation.CabinDescription }}</li>
   </ul>
@@ -57,8 +57,8 @@ interface Reservation {
   CabinPrice: number;
   CabinDescription?: string;
   AccessPin: string;
-  CheckIn?: string;
-  CheckOut?: string;
+  checkIn?: string;
+  checkOut?: string;
 }
 const totalPrice = ref(0)
 
@@ -67,9 +67,9 @@ onMounted(() => {
   if (storedReservation) {
     reservation.value = JSON.parse(storedReservation);
 
-    if (reservation.value?.CheckIn && reservation.value?.CheckOut) {
-      const inDate = new Date(reservation.value.CheckIn);
-      const outDate = new Date(reservation.value.CheckOut);
+    if (reservation.value?.checkIn && reservation.value?.checkOut) {
+      const inDate = new Date(reservation.value.checkIn);
+      const outDate = new Date(reservation.value.checkOut);
       const days = Math.ceil((outDate.getTime() - inDate.getTime()) / (1000 * 60 * 60 * 24));
       totalPrice.value = days > 0 ? days * reservation.value.CabinPrice : 0;
     }
@@ -81,8 +81,8 @@ const generateQRContent = (res: Reservation): string => {
   return `
 Cabana: ${res.CabinName}
 Locație: ${res.CabinLocation}
-Check-in: ${res.CheckIn}
-Check-out: ${res.CheckOut}
+Check-in: ${res.checkIn}
+Check-out: ${res.checkOut}
 PIN: ${res.AccessPin}
   `.trim()
 }
