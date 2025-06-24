@@ -156,17 +156,51 @@ const attractions = ref([
 </script>
 
 <style scoped>
+
 .page-header {
-  background-color: var(--color-primary);
-  color: var(--color-white);
-  padding: 4rem 0;
+  height: 40vh;
+  min-height: 300px;
+  background-image: linear-gradient(rgba(10, 68, 68, 0.5), rgba(255, 255, 255, 0.5)), url('https://ext.same-assets.com/0/2960537118.png');
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
-  margin-bottom: 2rem;
+  color: var(--color-white);
+  position: relative;
+  z-index: 0; /* pentru referință */
+  
+}
+
+.page-header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 50px;
+  background: #f4f6f4; /* sau #f8fafc dacă ai alta culoare mai deschisă jos */
+  border-top-left-radius: 100% 100px;
+  border-top-right-radius: 100% 100px;
+  z-index: -1; /* 🟢 esențial: trimite curbura sub conținut */
+}
+
+
+.page-header-content {
+  max-width: 800px;
+  padding: 0 1rem;
 }
 
 .page-header h1 {
-  color: var(--color-white);
+  font-size: 3.5rem;
   margin-bottom: 1rem;
+  color: var(--color-white);
+}
+
+.page-header p {
+  font-size: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .location-card-large {

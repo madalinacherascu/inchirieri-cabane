@@ -110,10 +110,6 @@ h1 {
   object-fit: cover;
 }
 
-.activity-content {
-  padding: 1.5rem;
-}
-
 h2 {
   font-size: 1.4rem;
   margin-bottom: 0.5rem;

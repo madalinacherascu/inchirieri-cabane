@@ -7,12 +7,6 @@
             <a href="tel:+40741583639"><font-awesome-icon icon="phone" /> +40 741 583 639</a>
             <a href="mailto:cabanemontane@yahoo.com"><font-awesome-icon icon="envelope" /> contact@cabanemontane.ro</a>
           </div>
-          <div class="social-icons">
-            <a href="#" aria-label="Facebook"><font-awesome-icon :icon="['fab', 'facebook-f']" /></a>
-            <a href="#" aria-label="Instagram"><font-awesome-icon :icon="['fab', 'instagram']" /></a>
-            <a href="#" aria-label="Twitter"><font-awesome-icon :icon="['fab', 'twitter']" /></a>
-            <a href="#" aria-label="Youtube"><font-awesome-icon :icon="['fab', 'youtube']" /></a>
-          </div>
         </div>
       </div>
     </div>
@@ -50,8 +44,8 @@
 
                 </div>
                 <div v-if="showDropdown" class="dropdown-menu">
-                  <router-link to="/contul-meu">Contul meu</router-link>
-                  <router-link to="/rezervarile-mele">Rezervările mele</router-link>
+                  <router-link to="/contulMeu">Contul meu</router-link>
+                  <router-link to="/rezervarileMele">Rezervările mele</router-link>
                   <button @click="logout">Logout</button>
                 </div>
               </div>

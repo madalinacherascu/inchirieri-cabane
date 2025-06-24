@@ -39,7 +39,6 @@ import ResetareParola from './views/ResetareParola.vue'
 import RezervareCabana from './views/RezervareCabana.vue'
 import ConfirmReservation from './views/ConfirmReservation.vue'
 import SearchResult from './views/SearchResult.vue'
-import ContulMeu from './views/ContulMeu.vue'
 import TermeniConditii from './views/TermeniConditii.vue'
 import PoliticaConfidentialitate from './views/PoliticaConfidentialitate.vue'
 import Cookies from './views/Cookies.vue'
@@ -47,6 +46,8 @@ import TraseeMontane from './views/TraseeMontane.vue'
 import ActivitatiAerLiber from './views/ActivitatiAerLiber.vue'
 import EvenimenteSpeciale from './views/EvenimenteSpeciale.vue'
 import OferteSezoniere from './views/OferteSezoniere.vue'
+import ContulMeu from './views/ContulMeu.vue'
+import RezervarileMele from './views/RezervarileMele.vue'
 
 
 library.add(
@@ -92,6 +93,8 @@ const routes = [
   { path: '/activitatiAerLiber', component: ActivitatiAerLiber },
   { path: '/evenimenteSpeciale', component: EvenimenteSpeciale },
   { path: '/oferteSezoniere', component: OferteSezoniere },
+   { path: '/contulMeu', component: ContulMeu },
+   {path: '/rezervarileMele', component: RezervarileMele}
 
 
 ]

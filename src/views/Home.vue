@@ -4,116 +4,8 @@
       <div class="hero-content">
         <h1>Evadează în natură</h1>
         <p>Descoperă cabane de vis în cele mai pitorești locații montane</p>
-        <router-link to="/cabane" class="btn">Explorează cabane</router-link>
+        
       </div>
-    </section>
-    <section class="search-section">
-      <div class="search-box">
-        <div class="search-field">
-          <label for="location">
-            <font-awesome-icon icon="map-marker-alt" />
-            <span>Locație</span>
-          </label>
-          <select id="location" v-model="location">
-            <option value="">Toate locațiile</option>
-            <option value="brașov">Brașov</option>
-            <option value="predeal">Predeal</option>
-            <option value="sinaia">Sinaia</option>
-            <option value="busteni">Bușteni</option>
-            <option value="râșnov">Râșnov</option>
-            <option valie="fundata">Fundata</option>
-          </select>
-        </div>
-
-        <div class="search-field">
-          <label for="check-in">
-            <font-awesome-icon icon="calendar-alt" />
-            <span>Check-in</span>
-          </label>
-          <input id="check-in" type="date" v-model="checkIn" />
-        </div>
-
-        <div class="search-field">
-          <label for="check-out">
-            <font-awesome-icon icon="calendar-alt" />
-            <span>Check-out</span>
-          </label>
-          <input id="check-out" type="date" v-model="checkOut" />
-
-        </div>
-
-        <div class="search-field">
-          <label for="guests">
-            <font-awesome-icon icon="users" />
-            <span>Oaspeți</span>
-          </label>
-          <select id="guests" v-model="guests">
-            <option value="1">1 oaspete</option>
-            <option value="2" selected>2 oaspeți</option>
-            <option value="3">3 oaspeți</option>
-            <option value="4">4 oaspeți</option>
-            <option value="5">5 oaspeți</option>
-            <option value="6">6+ oaspeți</option>
-          </select>
-        </div>
-
-        <button class="search-btn" @click="handleSearch">
-          <font-awesome-icon icon="search" />
-          <span>Caută</span>
-        </button>
-      </div>
-
-     <div class="results" v-if="searchResults.length">
-  <h3 class="results-title">Rezultate găsite:</h3>
-  <div class="cabin-grid">
-    <div v-for="cabin in searchResults" :key="cabin.id" class="cabin-card">
-      
-      <!-- Imagine + Locație -->
-      <div class="cabin-image">
-        <img :src="cabin.image" :alt="`Imagine ${cabin.name}`" />
-        <div class="cabin-location">
-          <i class="fas fa-map-marker-alt"></i>
-          {{ cabin.location }}
-        </div>
-      </div>
-
-      <!-- Detalii -->
-      <div class="cabin-details">
-        <h4 class="cabin-name">{{ cabin.name }}</h4>
-
-        <!-- Preț -->
-        <div class="cabin-price">
-          <div class="price">{{ cabin.price }} RON</div>
-          <div class="duration">/ noapte</div>
-        </div>
-
-        <!-- Capacitate și Dormitoare -->
-        <div class="cabin-amenities">
-          <span>{{ cabin.capacity }} persoane</span>
-          <span>{{ cabin.bedrooms }} dormitoare</span>
-        </div>
-
-        <!-- Disponibilitate -->
-        <div class="cabin-availability" v-if="cabin.availableFrom || cabin.availableTo">
-  <span class="label">Disponibilitate:</span>
-  <span class="dates">
-    <template v-if="cabin.availableFrom">
-      {{ new Date(cabin.availableFrom).toLocaleDateString('ro-RO') }}
-    </template>
-    <span v-if="cabin.availableFrom && cabin.availableTo"> – </span>
-    <template v-if="cabin.availableTo">
-      {{ new Date(cabin.availableTo).toLocaleDateString('ro-RO') }}
-    </template>
-  </span>
-</div>
-
-      </div>
-    </div>
-  </div>
-</div>
-
-
-
     </section>
 
     <section>
@@ -147,7 +39,6 @@
           </div>
         </div>
       </div>
-
 
     </section>
     <section class="section popular-cabins">
@@ -184,10 +75,6 @@
 
             </div>
           </div>
-        </div>
-
-        <div class="text-center mt-4">
-          <router-link to="/cabane" class="btn btn-outline">Vezi toate cabanele</router-link>
         </div>
       </div>
     </section>
@@ -226,7 +113,6 @@
               <div class="author-testimonials" v-if="testimonial.review">
                 <i v-for="n in testimonial.review" :key="n" :class="'fas fa-star'"></i>
               </div>
-
             </div>
           </div>
         </div>
@@ -237,7 +123,7 @@
         <div class="cta-content">
           <h2>Pregătit pentru o experiență de neuitat?</h2>
           <p>Rezervă acum o cabană și bucură-te de frumusețea naturii!</p>
-          <router-link to="/rezervare" class="btn btn-lg">Rezervă o cabană</router-link>
+          <router-link to="/cabane" class="btn btn-lg">Rezervă o cabană</router-link>
         </div>
       </div>
     </section>
@@ -248,13 +134,13 @@
 import { onMounted, ref } from 'vue';
 import type { Ref } from 'vue';
 import axios from 'axios';
-//import { useRouter } from 'vue-router'
+
 
 const fetchData = async <T>(
   url: string,
   transformFn: (item: any) => T,
   targetArray: Ref<T[]>,
-  params: Record<string, any> = {} // al patrulea parametru
+  params: Record<string, any> = {}
 ) => {
   try {
     const response = await axios.get(url, { params });
@@ -274,7 +160,6 @@ interface Cabin {
   price: number;
   availableFrom: string | null;
   availableTo: string | null;
-  description?: string;
   amenities?: string;
   checkIn?: string | null;
   checkOut?: string | null;
@@ -324,94 +209,17 @@ onMounted(async () => {
     location: testimonials.Location,
     review: testimonials.Review
   }), testimonials);
-  
+
 });
-
-const location = ref('')
-const checkIn = ref('')
-const checkOut = ref('')
-const guests = ref('2')
-
-const searchResults = ref<Cabin[]>([]);
-
-
-const handleSearch = async () => {
-  await fetchData(
-    'http://172.20.10.3:5046/api/cabins/search',
-    (cabin) => ({
-      id: cabin.Id,
-      name: cabin.Name,
-      location: cabin.Location,
-      image: cabin.Image,
-      capacity: cabin.Capacity,
-      bedrooms: cabin.Bedrooms,
-      price: cabin.Price,
-      availableFrom: cabin.AvailableFrom,
-      availableTo: cabin.AvailableTo,
-      checkIn: cabin.CheckIn,
-      checkOut: cabin.CheckOut
-    }),
-    searchResults,
-    {
-      location: location.value,
-      checkIn: checkIn.value,
-      checkOut: checkOut.value,
-      guests: guests.value
-    }
-  )
-}
 
 </script>
 
 <style scoped>
-.results-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-}
-
-.cabin-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 2rem;
-}
-
-.results-title {
-  margin-bottom: 1.5rem;
-  font-size: 1.5rem;
-  font-weight: 600;
-}
-
-.no-results {
-  text-align: center;
-  color: var(--color-gray);
-  padding: 2rem 0;
-  font-style: italic;
-}
-.cabin-availability {
-  background-color: rgba(39, 174, 96, 0.1); /* verde deschis */
-  color: #27ae60; /* verde accent */
-  padding: 0.5rem 1rem;
-  border-radius: 50px;
-  font-size: 0.875rem;
-  display: inline-block;
-  margin-top: 0.75rem;
-}
-
-.cabin-availability .label {
-  font-weight: 600;
-  margin-right: 0.25rem;
-}
-
-.cabin-availability .dates {
-  font-style: italic;
-}
-
 
 .hero {
-  height: 80vh;
-  min-height: 600px;
-  background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://ext.same-assets.com/0/2960537118.png');
+  height: 40vh;
+  min-height: 300px;
+  background-image: linear-gradient(rgba(10, 68, 68, 0.5), rgba(255, 255, 255, 0.5)), url('https://ext.same-assets.com/0/2960537118.png');
   background-size: cover;
   background-position: center;
   display: flex;
@@ -419,6 +227,44 @@ const handleSearch = async () => {
   justify-content: center;
   text-align: center;
   color: var(--color-white);
+  position: relative;
+  z-index: 0;
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 50px;
+  background: #f4f6f4; 
+  border-top-left-radius: 100% 100px;
+  border-top-right-radius: 100% 100px;
+  z-index: -1; 
+}
+.cta {
+  background-image: linear-gradient(rgba(10, 68, 68, 0.5), rgba(255, 255, 255, 0.5)), url('https://ext.same-assets.com/0/2960537118.png');
+  background-size: cover;
+  background-position: center;
+  color: var(--color-white);
+  text-align: center;
+  padding: 6rem 0;
+  position: relative;
+  z-index: 0;
+}
+
+.cta::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 0;
+  width: 100%;
+  height: 50px;
+  background: #f4f6f4; 
+  border-bottom-left-radius: 100% 100px;
+  border-bottom-right-radius: 100% 100px;
+  z-index: -1;
 }
 
 .hero-content {
@@ -435,68 +281,6 @@ const handleSearch = async () => {
 .hero p {
   font-size: 1.5rem;
   margin-bottom: 2rem;
-}
-
-.hero .btn {
-  font-size: 1.125rem;
-  padding: 1rem 2rem;
-}
-
-.search-section {
-  margin-top: -50px;
-  margin-bottom: 2rem;
-  position: relative;
-  z-index: 10;
-}
-
-.search-box {
-  background-color: var(--color-white);
-  border-radius: 8px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  display: flex;
-  padding: 1.5rem;
-  gap: 1rem;
-}
-
-.search-field {
-  flex: 1;
-  min-width: 0;
-}
-
-.search-field label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-  font-weight: 600;
-}
-
-.search-field select,
-.search-field input {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
-  font-size: 1rem;
-}
-
-.search-btn {
-  align-self: flex-end;
-  padding: 0.75rem 1.5rem;
-  background-color: var(--color-accent);
-  color: var(--color-white);
-  border: none;
-  border-radius: 4px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.search-btn:hover {
-  background-color: var(--color-secondary);
 }
 
 .feature-card {
@@ -663,16 +447,6 @@ const handleSearch = async () => {
   margin-right: 2px;
 }
 
-
-.cta {
-  background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://ext.same-assets.com/0/3795016732.png');
-  background-size: cover;
-  background-position: center;
-  color: var(--color-white);
-  text-align: center;
-  padding: 6rem 0;
-}
-
 .cta h2 {
   color: var(--color-white);
   margin-bottom: 1rem;
@@ -686,6 +460,14 @@ const handleSearch = async () => {
   margin-left: auto;
   margin-right: auto;
 }
+.hero-divider {
+  height: 80px;
+  background-color: #e1e5e7; 
+  border-top-left-radius: 100% 50px;
+  border-top-right-radius: 100% 50px;
+  margin-top: -20px;
+}
+
 
 .btn-lg {
   font-size: 1.125rem;
@@ -703,48 +485,4 @@ const handleSearch = async () => {
   color: var(--color-white);
 }
 
-.mt-4 {
-  margin-top: 2.5rem;
-}
-
-@media (max-width: 992px) {
-  .search-box {
-    flex-wrap: wrap;
-  }
-
-  .search-field {
-    min-width: calc(50% - 0.5rem);
-  }
-
-  .search-btn {
-    min-width: 150px;
-    margin-top: 1rem;
-  }
-}
-
-@media (max-width: 768px) {
-  .hero h1 {
-    font-size: 2.5rem;
-  }
-
-  .hero p {
-    font-size: 1.25rem;
-  }
-
-  .search-field {
-    min-width: 100%;
-  }
-
-  .search-btn {
-    width: 100%;
-  }
-
-  .cta h2 {
-    font-size: 2rem;
-  }
-
-  .cta p {
-    font-size: 1rem;
-  }
-}
 </style>

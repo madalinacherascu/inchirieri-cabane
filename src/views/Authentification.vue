@@ -41,6 +41,7 @@ import { ref, reactive } from 'vue';
 import axios from 'axios';
 
 const form = reactive({
+  id:'',
   email: '',
   password: '',
   rememberMe: false
@@ -52,8 +53,10 @@ const loginError = ref(false);
 const submitForm = async () => {
   try {
     const response = await axios.post('http://172.20.10.3:5046/api/auth/login', {
+      id: form.id,
       email: form.email,
-      password: form.password
+      password: form.password,
+      rememberMe: form.rememberMe
     });
 
     const user = response.data;
@@ -169,7 +172,4 @@ window.location.href = '/';
   text-decoration: none;
 }
 
-.btn-link:hover {
-  text-decoration: underline;
-}
 </style>

@@ -200,17 +200,51 @@ const toggleFaq = (index: number) => {
 </script>
 
 <style scoped>
+
 .page-header {
-  background-color: var(--color-primary);
-  color: var(--color-white);
-  padding: 4rem 0;
+  height: 40vh;
+  min-height: 300px;
+  background-image: linear-gradient(rgba(10, 68, 68, 0.5), rgba(255, 255, 255, 0.5)), url('https://ext.same-assets.com/0/2960537118.png');
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
-  margin-bottom: 2rem;
+  color: var(--color-white);
+  position: relative;
+  z-index: 0; /* pentru referință */
+  
+}
+
+.page-header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 50px;
+  background: #f4f6f4; /* sau #f8fafc dacă ai alta culoare mai deschisă jos */
+  border-top-left-radius: 100% 100px;
+  border-top-right-radius: 100% 100px;
+  z-index: -1; /* 🟢 esențial: trimite curbura sub conținut */
+}
+
+
+.page-header-content {
+  max-width: 800px;
+  padding: 0 1rem;
 }
 
 .page-header h1 {
-  color: var(--color-white);
+  font-size: 3.5rem;
   margin-bottom: 1rem;
+  color: var(--color-white);
+}
+
+.page-header p {
+  font-size: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .contact-form-container {
@@ -338,10 +372,16 @@ const toggleFaq = (index: number) => {
 }
 
 .faq-item {
+  border-radius: 12px;
+  background-color: #ffffff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
   margin-bottom: 1rem;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
   overflow: hidden;
+  transition: box-shadow 0.3s ease;
+}
+
+.faq-item:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
 }
 
 .faq-question {

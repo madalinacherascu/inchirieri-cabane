@@ -22,16 +22,23 @@
               </div>
 
               <div class="form-group">
-                <label for="checkin">Check-in</label>
-                <input id="checkin" type="date" v-model="form.checkIn" required />
+                <label for="checkIn">Check-in</label>
+                <Datepicker v-model="form.checkIn" :format="'yyyy-MM-dd'" :disabled-date="isDateDisabled" required
+                  ref="checkInPicker" />
               </div>
 
               <div class="form-group">
-                <label for="checkout">Check-out</label>
-                <input id="checkout" type="date" v-model="form.checkOut" required />
+                <label for="checkOut">Check-out</label>
+                <Datepicker v-model="form.checkOut" :format="'yyyy-MM-dd'" :disabled-date="isCheckOutDisabled" required
+                  ref="checkOutPicker" />
               </div>
+
+
               <div v-if="isOverlapping" class="reservation-warning">
-                ❌ Cabana este deja rezervată în perioada selectată. Te rugăm să alegi alte date.
+                Cabana este deja rezervată în perioada selectată. Te rugăm să alegi alte date.
+              </div>
+              <div v-if="isInvalidDateRange" class="reservation-warning">
+                Data de check-in este ulterioară datei de check-out. Te rugăm să alegi un interval valid.
               </div>
 
 
@@ -44,10 +51,10 @@
                 <textarea id="message" v-model="form.message" rows="5" required></textarea>
               </div>
 
-              <button type="submit" class="btn btn-full">Rezervă</button>
-              
+              <button type="submit" class="btn btn-full" :disabled="isOverlapping">Rezervă</button>
+
             </form>
-            
+
           </div>
 
           <div class="cabin-info-card" v-if="cabin">
@@ -110,13 +117,10 @@
     </div>
   </div>
   <div v-if="errorMessage" class="toast-error">
-  {{ errorMessage }}
-</div>
+    {{ errorMessage }}
+  </div>
 
 </template>
-
-
-
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
@@ -124,10 +128,10 @@ import { useRoute } from 'vue-router';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { computed } from 'vue'
-
+import Datepicker from 'vue3-datepicker'
+import { watch } from 'vue';
 
 const errorMessage = ref('');
-
 
 const totalPrice = computed(() => {
   if (!form.checkIn || !form.checkOut || !cabin.value) return 0;
@@ -141,18 +145,22 @@ const totalPrice = computed(() => {
   return diffDays > 0 ? diffDays * cabin.value.price : 0
 })
 
-
 const router = useRouter();
 
 const form = reactive({
   name: '',
   email: '',
   phone: '',
-  country: '',
-  checkIn: '',
-  checkOut: '',
+  checkIn: undefined as Date | undefined,
+  checkOut: undefined as Date | undefined,
   message: ''
 })
+
+watch(() => form.checkIn, (newCheckIn) => {
+  if (form.checkOut && newCheckIn && form.checkOut <= newCheckIn) {
+    form.checkOut = undefined;
+  }
+});
 
 
 const formSubmitted = ref(false);
@@ -163,23 +171,33 @@ const submitForm = async () => {
     return;
   }
 
+  if (!form.checkIn || !form.checkOut) {
+    errorMessage.value = 'Te rugăm să selectezi o perioadă validă.';
+    return;
+  }
+
+  if (isOverlapping.value) {
+    errorMessage.value = 'Perioada selectată este deja rezervată.';
+    return;
+  }
+
   const payload = {
     name: form.name,
     email: form.email,
     phone: form.phone,
-    country: form.country,
     message: form.message,
-    checkIn: form.checkIn,
-    checkOut: form.checkOut,
+    checkIn: form.checkIn.toISOString(),
+    checkOut: form.checkOut.toISOString(),
     cabinId: cabin.value.id,
     cabinName: cabin.value.name,
     cabinLocation: cabin.value.location,
     cabinCapacity: cabin.value.capacity,
     cabinBedrooms: cabin.value.bedrooms,
-    cabinPrice: cabin.value.price
+    cabinPrice: cabin.value.price,
+    totalPrice: totalPrice.value
+
   };
 
-  
   try {
     const response = await axios.post('http://172.20.10.3:5046/api/reservationrequest', payload);
 
@@ -206,6 +224,7 @@ const submitForm = async () => {
         clearTimeout(timeout);
       });
 
+
     router.push('/ConfirmReservation');
 
     formSubmitted.value = true;
@@ -216,19 +235,21 @@ const submitForm = async () => {
     form.name = '';
     form.email = '';
     form.phone = '';
-    form.country = '';
     form.message = '';
+    form.checkIn = undefined;
+    form.checkOut = undefined;
 
   } catch (error: any) {
     if (error.response?.status === 409) {
-  errorMessage.value = error.response.data.message;
-  setTimeout(() => errorMessage.value = '', 4000);
-} else {
-  console.error('Eroare generală la rezervare:', error);
-}
-
+      errorMessage.value = error.response.data.message;
+      setTimeout(() => errorMessage.value = '', 4000);
+    } else {
+      console.error('Eroare generală la rezervare:', error);
+      errorMessage.value = 'Eroare la salvarea rezervării.';
+    }
   }
 };
+
 
 const amenityIcons: Record<string, [string, string]> = {
   WiFi: ['fas', 'wifi'],
@@ -246,8 +267,6 @@ const amenityIcons: Record<string, [string, string]> = {
   'Mic dejun inclus': ['fas', 'coffee']
 }
 
-
-
 interface Cabin {
   id: number;
   name: string;
@@ -256,6 +275,7 @@ interface Cabin {
   capacity: number;
   bedrooms: number;
   price: number;
+  totalPrice: number;
   description?: string;
   amenities?: string;
 }
@@ -275,33 +295,54 @@ onMounted(async () => {
       capacity: data.Capacity,
       bedrooms: data.Bedrooms,
       price: data.Price,
+      totalPrice:data.TotalPrice,
       description: data.Description,
       amenities: data.Amenities
+    
     };
   } catch (error) {
     console.error('Eroare la încărcarea cabanei:', error);
   }
-  const { data: reservations } = await axios.get(`http://172.20.10.3:5046/api/cabins/reserved-dates/${route.params.id}`);
-  reservedRanges.value = reservations;
+  const { data } = await axios.get(`http://172.20.10.3:5046/api/cabins/reserved-dates/${route.params.id}`);
+  reservedRanges.value = data;
 });
 
+const isDateDisabled = (date: Date) => {
+  return reservedRanges.value.some(range => {
+    const rStart = new Date(range.checkIn);
+    const rEnd = new Date(range.checkOut);
+    return date >= rStart && date <= rEnd;
+  });
+};
+const isInvalidDateRange = computed(() => {
+  return form.checkIn && form.checkOut && new Date(form.checkIn) > new Date(form.checkOut);
+});
 const isOverlapping = computed(() => {
   if (!form.checkIn || !form.checkOut) return false;
 
-  const checkInDate = new Date(form.checkIn);
-  const checkOutDate = new Date(form.checkOut);
+  const checkIn = form.checkIn;
+  const checkOut = form.checkOut;
 
-  return reservedRanges.value.some(r => {
-    const rStart = new Date(r.checkIn);
-    const rEnd = new Date(r.checkOut);
+  return reservedRanges.value.some(range => {
+    const rStart = new Date(range.checkIn);
+    const rEnd = new Date(range.checkOut);
+
     return (
-      (checkInDate >= rStart && checkInDate < rEnd) ||
-      (checkOutDate > rStart && checkOutDate <= rEnd) ||
-      (checkInDate <= rStart && checkOutDate >= rEnd)
+      (checkIn >= rStart && checkIn < rEnd) ||
+      (checkOut > rStart && checkOut <= rEnd) ||
+      (checkIn <= rStart && checkOut >= rEnd)
     );
   });
 });
 
+
+const isCheckOutDisabled = (date: Date) => {
+  if (!form.checkIn) return isDateDisabled(date);
+
+  return date <= form.checkIn ||        
+    isDateDisabled(date)            
+
+};
 
 
 setTimeout(() => {
@@ -362,6 +403,7 @@ const toggleFaq = (index: number) => {
     transform: translateY(100%);
     opacity: 0;
   }
+
   to {
     transform: translateY(0%);
     opacity: 1;
@@ -485,6 +527,18 @@ const toggleFaq = (index: number) => {
   margin-bottom: 0.5rem;
   font-weight: 600;
 }
+
+/* Aplica stilul de input normal */
+.form-group :deep(input),
+.form-group input {
+  width: 100%;
+  padding: 8px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
 
 .form-group input,
 .form-group select,
