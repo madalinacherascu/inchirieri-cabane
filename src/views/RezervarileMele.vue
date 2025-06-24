@@ -53,17 +53,28 @@ if (storedUserRaw) {
 }
 
 onMounted(async () => {
-  if (!userId) return
+  const token = localStorage.getItem('token')
+  if (!token) {
+    console.warn('Token lipsă – utilizator neautentificat.')
+    return
+  }
 
   try {
-    const response = await fetch(`http://172.20.10.3:5174/api/`)
+    const response = await fetch('http://172.20.10.3:5174/api/bookings/mine', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+
     if (!response.ok) throw new Error('Eroare la încărcarea rezervărilor')
+
     const data = await response.json()
     bookings.value = data
   } catch (error) {
     console.error('Eroare la fetch:', error)
   }
 })
+
 </script>
 
 <style scoped>

@@ -2,103 +2,197 @@
   <div class="account-container">
     <h2>Contul meu</h2>
 
-    <div class="account-card">
-      <div v-if="user" class="account-field">
+    <div v-if="user" class="account-card">
+
+      <div class="account-field">
         <label>Nume:</label>
-        <span>{{ user.Name }}</span>
+        <span v-if="!editMode">{{ user.Name }}</span>
+        <input v-else v-model="editableUser.Name" />
       </div>
 
-      <div v-if = "user" class="account-field">
+      <div class="account-field">
         <label>Email:</label>
-        <span>{{ user.Email }}</span>
+        <span v-if="!editMode">{{ user.Email }}</span>
+        <input v-else v-model="editableUser.Email" />
       </div>
+
+      <div class="account-field">
+        <label>Telefon:</label>
+        <span v-if="!editMode">{{ user.NumarTelefon || '–' }}</span>
+        <input v-else v-model="editableUser.NumarTelefon" />
+      </div>
+
+      <div class="account-field">
+        <label>Naționalitate:</label>
+        <span v-if="!editMode">{{ user.Nationalitate || '–' }}</span>
+        <input v-else v-model="editableUser.Nationalitate" />
+      </div>
+
+      <div class="account-field">
+        <label>Adresă:</label>
+        <span v-if="!editMode">{{ user.Adresa || '–' }}</span>
+        <input v-else v-model="editableUser.Adresa" />
+      </div>
+
+      <div class="account-field">
+        <label>Data nașterii:</label>
+        <span v-if="!editMode">{{ formatDate(user.DataNasterii) }}</span>
+        <input v-else type="date" v-model="editableUser.DataNasterii" />
+      </div>
+            <button @click="editMode = !editMode" class="edit-button">
+        {{ editMode ? 'Anulează' : 'Modifică' }}
+      </button>
+
+      <button v-if="editMode" @click="saveChanges" class="save-button">Salvează</button>
+    </div>
+
+    <div v-else-if="error" class="error-message">
+      {{ error }}
+    </div>
+
+    <div v-else class="loading-message">
+      Se încarcă datele...
     </div>
   </div>
 </template>
 
-
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, reactive, onMounted } from 'vue'
+import axios from 'axios'
 
-const user = ref<{ Name: string; Email: string; id: string, NumarTelefon: number } | null>(null);
+interface User {
+  Name: string
+  Email: string
+  DataNasterii: string
+  NumarTelefon: string
+  Nationalitate: string
+  Adresa: string
+}
 
-onMounted(() => {
-  const stored = localStorage.getItem('user');
-  if (stored) {
-    try {
-      user.value = JSON.parse(stored); 
-      console.log("User din localStorage:", user.value);
-    } catch (e) {
-      console.warn('Eroare la citirea user din localStorage:', e);
+const user = ref<User | null>(null)
+const editableUser = reactive<User>({
+  Name: '',
+  Email: '',
+  DataNasterii: '',
+  NumarTelefon: '',
+  Nationalitate: '',
+  Adresa: ''
+})
+
+const editMode = ref(false)
+const error = ref<string | null>(null)
+
+const formatDate = (date: string) => {
+  if (!date) return '–'
+  const d = new Date(date)
+  return d.toLocaleDateString('ro-RO', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  })
+}
+
+onMounted(async () => {
+  try {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      error.value = 'Nu există token. Vă rugăm autentificați-vă.'
+      return
     }
-  }
-});
-</script>
 
+    const response = await axios.get('http://172.20.10.3:5046/api/users/me', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+
+    user.value = response.data
+    Object.assign(editableUser, response.data)
+  } catch (err) {
+    console.error('Eroare la încărcarea contului:', err)
+    error.value = 'Nu s-au putut încărca datele contului.'
+  }
+})
+
+const saveChanges = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      error.value = 'Token lipsă.';
+      return;
+    }
+
+    await axios.put('http://172.20.10.3:5046/api/auth/update', editableUser, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    // sincronizare locală
+    if (user.value) {
+      Object.assign(user.value, editableUser);
+    }
+    editMode.value = false;
+  } catch (err) {
+    console.error('Eroare la salvare:', err);
+    error.value = 'Nu s-au putut salva modificările.';
+  }
+};
+
+</script>
 
 <style scoped>
 .account-container {
   max-width: 600px;
   margin: 2rem auto;
-  padding: 2rem;
-}
-
-h2 {
-  text-align: center;
-  margin-bottom: 2rem;
+  padding: 1.5rem;
 }
 
 .account-card {
-  background-color: #fff;
-  padding: 2rem;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  background: #f5f5f5;
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .account-field {
-  display: flex;
-  justify-content: space-between;
   margin-bottom: 1rem;
-  font-size: 1.1rem;
 }
 
-.account-buttons {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 1.5rem;
-  gap: 1rem;
-}
-
-.edit-form {
-  margin-top: 2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+label {
+  font-weight: bold;
+  display: inline-block;
+  width: 140px;
 }
 
 input {
-  width: 100%;
-  padding: 0.6rem;
-  font-size: 1rem;
-  border-radius: 8px;
-  border: 1px solid #ccc;
+  padding: 0.4rem;
+  width: calc(100% - 150px);
 }
 
-.btn {
-  padding: 0.6rem 1.2rem;
+.edit-button,
+.save-button {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background-color: #042311;
+  color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 1rem;
 }
 
-.btn-primary {
-  background-color:  #004502;;
-  color: white;
+.edit-button:hover,
+.save-button:hover {
+  background-color: #2563eb;
 }
 
-.btn-success {
-  background-color: #28a745;
-  color: white;
+.error-message {
+  color: red;
+  margin-top: 1rem;
+}
+
+.loading-message {
+  color: gray;
+  margin-top: 1rem;
 }
 </style>

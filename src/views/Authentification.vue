@@ -41,7 +41,6 @@ import { ref, reactive } from 'vue';
 import axios from 'axios';
 
 const form = reactive({
-  id:'',
   email: '',
   password: '',
   rememberMe: false
@@ -53,28 +52,32 @@ const loginError = ref(false);
 const submitForm = async () => {
   try {
     const response = await axios.post('http://172.20.10.3:5046/api/auth/login', {
-      id: form.id,
       email: form.email,
       password: form.password,
       rememberMe: form.rememberMe
     });
 
     const user = response.data;
-localStorage.setItem('user', JSON.stringify(user));
 
-window.location.href = '/';
+    // salvează userul în localStorage
+    localStorage.setItem('user', JSON.stringify(user));
 
+    if (user.token) {
+      localStorage.setItem('token', user.token);
+    }
 
     formSubmitted.value = true;
     loginError.value = false;
+
+    window.location.href = '/';
   } catch (error) {
     console.error('Eroare autentificare:', error);
     formSubmitted.value = false;
     loginError.value = true;
   }
 };
-
 </script>
+
 
 <style scoped>
 .auth-page {
