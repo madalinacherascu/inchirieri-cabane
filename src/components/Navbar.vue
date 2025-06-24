@@ -45,7 +45,6 @@
                 </div>
                 <div v-if="showDropdown" class="dropdown-menu">
                   <router-link to="/contulMeu">Contul meu</router-link>
-                  <router-link to="/rezervarileMele">Rezervările mele</router-link>
                   <button @click="logout">Logout</button>
                 </div>
               </div>

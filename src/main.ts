@@ -47,7 +47,7 @@ import ActivitatiAerLiber from './views/ActivitatiAerLiber.vue'
 import EvenimenteSpeciale from './views/EvenimenteSpeciale.vue'
 import OferteSezoniere from './views/OferteSezoniere.vue'
 import ContulMeu from './views/ContulMeu.vue'
-import RezervarileMele from './views/RezervarileMele.vue'
+
 
 
 library.add(
@@ -94,7 +94,6 @@ const routes = [
   { path: '/evenimenteSpeciale', component: EvenimenteSpeciale },
   { path: '/oferteSezoniere', component: OferteSezoniere },
    { path: '/contulMeu', component: ContulMeu },
-   {path: '/rezervarileMele', component: RezervarileMele}
 
 
 ]
