@@ -10,49 +10,7 @@
     <div class="container">
       <section class="section contact-content">
         <div class="contact-grid grid grid-2">
-          <div class="contact-form-container">
-            <h2>Trimite-ne un mesaj</h2>
-            <form class="contact-form" @submit.prevent="submitForm">
-              <div class="form-group">
-                <label for="name">Nume complet</label>
-                <input id="name" type="text" v-model="form.name" required />
-              </div>
 
-              <div class="form-group">
-                <label for="email">Email</label>
-                <input id="email" type="email" v-model="form.email" required />
-              </div>
-
-              <div class="form-group">
-                <label for="phone">Telefon</label>
-                <input id="phone" type="tel" v-model="form.phone" />
-              </div>
-
-              <div class="form-group">
-                <label for="subject">Subiect</label>
-                <select id="subject" v-model="form.subject" required>
-                  <option value="">Selectează subiectul</option>
-                  <option value="rezervare">Informații rezervare</option>
-                  <option value="anulare">Anulare rezervare</option>
-                  <option value="informatii">Informații generale</option>
-                  <option value="feedback">Feedback</option>
-                  <option value="altele">Altele</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label for="message">Mesaj</label>
-                <textarea id="message" v-model="form.message" rows="5" required></textarea>
-              </div>
-
-              <button type="submit" class="btn btn-full">Trimite mesaj</button>
-            </form>
-
-            <div class="form-success" v-if="formSubmitted">
-              <font-awesome-icon icon="check" />
-              <p>Mulțumim pentru mesaj! Te vom contacta în curând.</p>
-            </div>
-          </div>
 
           <div class="contact-info">
             <h2>Informații de contact</h2>
@@ -104,15 +62,6 @@
               </div>
             </div>
 
-            <div class="social-links">
-              <h3>Urmărește-ne</h3>
-              <div class="social-icons">
-                <a href="#" aria-label="Facebook"><font-awesome-icon :icon="['fab', 'facebook-f']" /></a>
-                <a href="#" aria-label="Instagram"><font-awesome-icon :icon="['fab', 'instagram']" /></a>
-                <a href="#" aria-label="Twitter"><font-awesome-icon :icon="['fab', 'twitter']" /></a>
-                <a href="#" aria-label="Youtube"><font-awesome-icon :icon="['fab', 'youtube']" /></a>
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -137,33 +86,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
-
-const form = reactive({
-  name: '',
-  email: '',
-  phone: '',
-  subject: '',
-  message: ''
-});
-
-const formSubmitted = ref(false);
-
-const submitForm = () => {
-  console.log('Formular trimis:', form);
-
-  form.name = '';
-  form.email = '';
-  form.phone = '';
-  form.subject = '';
-  form.message = '';
-
-  formSubmitted.value = true;
-
-  setTimeout(() => {
-    formSubmitted.value = false;
-  }, 5000);
-};
+import { ref } from 'vue';
 
 const faqs = ref([
   {
